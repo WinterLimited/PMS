@@ -38,6 +38,7 @@ public class ProjectsService {
         for (ProjectUser projectUser : projectUserList) {
             ProjectsDto.GetProjectRes getProjectRes =
                     new ProjectsDto.GetProjectRes(projectsRepository.findById(projectUser.getProjects().getIdNum()).orElseThrow(null));
+            getProjectResList.add(getProjectRes);
         }
 
         return getProjectResList;
@@ -67,6 +68,15 @@ public class ProjectsService {
 
         return projectsRepository.save(projects);
     }
+
+    @Transactional
+    public String deleteProject(Long projectId) {
+
+        projectsRepository.deleteById(projectId);
+
+        return "SUCCESS";
+    }
+
     @Transactional
     public String saveProjectRoles(List<ProjectsDto.ProjectRolesDto> projectRolesDtoList) {
 

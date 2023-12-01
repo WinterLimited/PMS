@@ -12,7 +12,7 @@ import org.hibernate.annotations.Where;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Where(clause = "del = false")
-@SQLDelete(sql = "UPDATE TaskGroup SET del = true WHERE id_num = ?")
+@SQLDelete(sql = "UPDATE task_group SET del = true WHERE id_num = ?")
 public class TaskGroup extends BaseEntity {
 
     @Id

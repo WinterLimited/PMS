@@ -23,18 +23,23 @@ import {
     TableHead,
     TableRow,
     TableCell,
-    TableBody, Table, Card as MUICard, CardContent, Collapse,
+    TableBody, Table, Card as MUICard, CardContent, Collapse, Modal,
 } from '@mui/material';
 import axios from "../../../redux/axiosConfig";
-import { Data } from "./data";
+import {API_LINK, Data} from "./data";
 import {getRole}  from "../../common/tokenUtils";
 import CloseIcon from "@mui/icons-material/Close";
+import ConfirmModal from "../../common/ConfirmModal";
 import ErrorModal from "../../common/ErrorModal";
 import SuccessModal from "../../common/SuccessModal";
 import {DeleteOutline} from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
-import GroupsIcon from "@mui/icons-material/Groups";
+import CancelIcon from '@mui/icons-material/Cancel';
+import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import {fetchTableData} from "../../../redux/tableSlice";
+import {useAppDispatch} from "../../../redux/store";
 
 type Project = {
     projectName: string,
@@ -111,6 +116,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index , boxStyle }
 };
 
 const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, projectIdNum }) => {
+    const dispatch = useAppDispatch();
     const [tabValue, setTabValue] = useState<number>(0);
     const [projectInfo, setProjectInfo] = useState<Project>();
     const [taskInfo, setTaskInfo] = useState<Task[]>([]);
@@ -121,9 +127,11 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
     const [allUsers, setAllUsers] = useState<User[]>([]);
     const [isEditMode, setEditMode] = useState<boolean>(false);
     const [isSuccessModalOpen, setSuccessModalOpen] = useState<boolean>(false);
+    const [isDelSuccessModalOpen, setDelSuccessModalOpen] = useState<boolean>(false);
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [isErrorModalOpen, setErrorModalOpen] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isDeleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
 
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
         event.stopPropagation();
@@ -170,6 +178,29 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
             setRoleInfo(newList);
         }
     };
+
+    const SuccessClose = () => {
+        dispatch(fetchTableData(API_LINK));
+        setDelSuccessModalOpen(false);
+        onClose();
+    };
+
+    const handleDeleteProject = () => {
+        axios.delete(`/api/project/${projectIdNum}`)
+            .then((response) => {
+                if (response.status === 200) {
+                    setSuccessMessage("프로젝트 삭제가 완료되었습니다.");
+                    setDelSuccessModalOpen(true);
+                } else {
+                    setErrorMessage("프로젝트 삭제가 실패했습니다.");
+                    setErrorModalOpen(true);
+                }
+            })
+            .catch((error) => {
+                setErrorMessage("프로젝트 삭제가 실패했습니다.");
+                setErrorModalOpen(true);
+            });
+    }
 
     useEffect(() => {
         axios.get(`/api/user`)
@@ -322,6 +353,17 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                                     <Typography variant="body2" ml={1} sx={{ fontSize: '12px', color: '#888888', marginTop: '5px', display: 'inline-block' }}>
                                         {projectInfo.startDate} ~ {projectInfo.endDate}
                                     </Typography>
+
+                                    <Box sx={{ float: 'right' }}>
+                                        <IconButton onClick={() => setEditMode(!isEditMode)} size="small" sx={{ padding: '0' }}>
+                                            {
+                                                isEditMode ?
+                                                    <CancelIcon /> :
+                                                    <EditIcon />
+                                            }
+                                        </IconButton>
+                                    </Box>
+
                                 </Typography>
                                 <Divider />
                                 <Box sx={{ mt: 2 }}>
@@ -426,7 +468,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                                         <Table>
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell sx={{tableHeaderStyles, width: '75px'}} align="center">권한등급</TableCell>
+                                                    <TableCell sx={{ ...tableHeaderStyles, width: '75px' }} align="center">권한등급</TableCell>
                                                     <TableCell sx={tableHeaderStyles} align="center">직책명</TableCell>
                                                     <TableCell sx={tableHeaderStyles} align="center">직책설명</TableCell>
                                                     <TableCell sx={tableHeaderStyles} align="center">취소</TableCell>
@@ -556,7 +598,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
 
                             {
                                 taskInfo.map((task, index) => (
-                                    <Grid item xs={12} key={index}>
+                                    <Grid item xs={12} key={index} sx={{ mb: 2 }}>
                                         <MUICard>
                                             <CardContent>
                                                 <Box display="flex" justifyContent="space-between">
@@ -653,6 +695,57 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
 
                         <Box sx={{mt: 3, display: 'flex', justifyContent: 'flex-end'}}>
 
+                            {
+                                isEditMode ?
+                                    <Button
+                                        variant="contained"
+                                        sx={{
+                                            marginLeft: '10px',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            height: '35px',
+                                            backgroundColor: 'rgb(128, 0, 0)',
+                                            boxShadow: '0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12) !important',
+                                            textTransform: 'none',
+                                            minWidth: '75px',
+                                            padding: '0 12px',
+                                            '&:hover': {
+                                                textDecoration: 'none',
+                                                backgroundColor: 'rgba(128, 0, 0, .8)',
+                                            },
+                                        }}
+                                        onClick={() => setDeleteModalOpen(true)}
+                                    >
+                                        프로젝트 삭제(폐기)
+                                    </Button>
+                                    : null
+                            }
+
+                            {
+                                isEditMode ?
+                                    <Button
+                                        variant="contained"
+                                        sx={{
+                                            marginLeft: '10px',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            height: '35px',
+                                            backgroundColor: 'rgb(40, 49, 66)',
+                                            boxShadow: '0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12) !important',
+                                            textTransform: 'none',
+                                            minWidth: '75px',
+                                            padding: '0 12px',
+                                            '&:hover': {
+                                                textDecoration: 'none',
+                                                backgroundColor: 'rgb(40, 49, 66, 0.8)',
+                                            },
+                                        }}
+                                        onClick={() => handleConfirm(true)}
+                                    >
+                                        저장
+                                    </Button>
+                                : null
+                            }
 
                             {
                                 projectInfo.confirm === null ?
@@ -716,10 +809,28 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                 )
             }
 
+            {/*프로젝트 삭제 Confirm Modal*/}
+            <ConfirmModal
+                open={isDeleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                title="프로젝트 삭제"
+                description="프로젝트를 삭제하시겠습니까?"
+                onConfirm={handleDeleteProject}
+            />
+
+
             {/*성공 Modal*/}
             <SuccessModal
                 open={isSuccessModalOpen}
                 onClose={() => setSuccessModalOpen(false)}
+                title={""}
+                description={successMessage || ""}
+            />
+
+            {/*삭제 성공 Modal*/}
+            <SuccessModal
+                open={isDelSuccessModalOpen}
+                onClose={SuccessClose}
                 title={""}
                 description={successMessage || ""}
             />

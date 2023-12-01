@@ -50,6 +50,17 @@ public class ProjectsController {
         return new ResponseEntity<>(project, HttpStatus.OK);
     }
 
+    @Operation(summary = "프로젝트 삭제")
+    @ApiResponse(responseCode = "200", description = "삭제 성공")
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<String> deleteProject (
+            @PathVariable Long projectId
+    ) {
+        projectsService.deleteProject(projectId);
+
+        return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
+    }
+
     @Operation(summary = "프로젝트 승인 요청")
     @ApiResponse(responseCode = "200", description = "승인 요청 성공")
     @PutMapping("/confirm/{projectId}")

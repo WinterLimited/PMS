@@ -94,7 +94,7 @@ export default function SideDrawer({ open, drawerWidth }: DrawerProps) {
                     <img src={sidebarLogo} alt="Logo" style={{borderRadius: '100%', width: '40px', height: '40px', background: 'paddingBox rgb(2, 54, 113)', marginRight: '30px'}}/>
                     <Typography variant="h6" noWrap component="div" sx={{fontSize: '16px', fontWeight: 'bold', color: '#fff', fontFamily: 'Noto Sans KR', height: '100%'}}>
                         Coint Company <br/>
-                        MES System
+                        PMS
                     </Typography>
                 </Toolbar>
             </DrawerHeader>
