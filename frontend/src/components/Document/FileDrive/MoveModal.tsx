@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import axios from "../../../redux/axiosConfig";
 import {Box, LinearProgress, Typography} from "@mui/material";
-import TreeView from "@mui/lab/TreeView";
+import { TreeView } from '@mui/x-tree-view/TreeView';
 import ErrorModal from "../../common/ErrorModal";
 import SuccessModal from "../../common/SuccessModal";
 import {CloseSquare, MinusSquare, PlusSquare, StyledTreeItem} from "./DriveDirectory";
