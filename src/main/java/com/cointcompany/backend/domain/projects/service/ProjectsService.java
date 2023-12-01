@@ -78,16 +78,28 @@ public class ProjectsService {
     }
 
     @Transactional
-    public String saveProjectRoles(List<ProjectsDto.ProjectRolesDto> projectRolesDtoList) {
+    public String saveProjectRoles(List<ProjectsDto.ProjectRolesDto> projectRolesDtoList, Long projectIdNum) {
 
+        List<ProjectRoles> existingRoles = projectRolesRepository.findProjectRolesByProject_IdNum(projectIdNum);
+
+        // 새로운 역할 추가
         for (ProjectsDto.ProjectRolesDto projectRolesDto : projectRolesDtoList) {
-            ProjectRoles projectRoles = ProjectRoles.of(
-                    projectsRepository.findById(projectRolesDto.getProjectId()).orElseThrow(),
-                    projectRolesDto.getRoleName(),
-                    projectRolesDto.getRoleLevel(),
-                    projectRolesDto.getDescription()
-            );
-            projectRolesRepository.save(projectRoles);
+            if (existingRoles.stream().noneMatch(role -> role.getRoleName().equals(projectRolesDto.getRoleName()))) {
+                ProjectRoles projectRoles = ProjectRoles.of(
+                        projectsRepository.findById(projectIdNum).orElseThrow(),
+                        projectRolesDto.getRoleName(),
+                        projectRolesDto.getRoleLevel(),
+                        projectRolesDto.getDescription()
+                );
+                projectRolesRepository.save(projectRoles);
+            }
+        }
+
+        // 더이상 존재하지 않는 역할 삭제
+        for (ProjectRoles existingRole : existingRoles) {
+            if (projectRolesDtoList.stream().noneMatch(role -> role.getRoleName().equals(existingRole.getRoleName()))) {
+                projectRolesRepository.delete(existingRole);
+            }
         }
 
         return "SUCCESS";

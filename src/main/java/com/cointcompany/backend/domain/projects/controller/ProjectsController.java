@@ -91,10 +91,11 @@ public class ProjectsController {
     @ApiResponse(responseCode = "200", description = "등록 성공")
     @PostMapping("/role/{projectId}")
     public ResponseEntity<String> postProjectsRole (
+            @PathVariable Long projectId,
             @RequestBody List<ProjectsDto.ProjectRolesDto> projectRolesDtoList
     ) {
 
-        projectsService.saveProjectRoles(projectRolesDtoList);
+        projectsService.saveProjectRoles(projectRolesDtoList, projectId);
 
         return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
     }

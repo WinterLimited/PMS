@@ -23,7 +23,7 @@ import {
     TableHead,
     TableRow,
     TableCell,
-    TableBody, Table, Card as MUICard, CardContent, Collapse, Modal,
+    TableBody, Table, Card as MUICard, CardContent, Collapse, Modal, Chip,
 } from '@mui/material';
 import axios from "../../../redux/axiosConfig";
 import {API_LINK, Data} from "./data";
@@ -35,6 +35,7 @@ import SuccessModal from "../../common/SuccessModal";
 import {DeleteOutline} from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from '@mui/icons-material/Cancel';
+import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -86,6 +87,11 @@ type ProjectUser = {
     projectRoleId: number,
 }
 
+type Tag = {
+    projectId: number,
+    tagName: string,
+}
+
 interface TabPanelProps {
     children: React.ReactNode;
     value: number;
@@ -122,6 +128,8 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
     const [taskInfo, setTaskInfo] = useState<Task[]>([]);
     const [roleInfo, setRoleInfo] = useState<Role[]>([]);
     const [userInfo, setUserInfo] = useState<ProjectUser[]>([]);
+    const [tagInfo, setTagInfo] = useState<Tag[]>([]);
+    const [newTag, setNewTag] = useState<string>('');
     const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
     const [progress, setProgress] = useState<number>(0);
     const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -171,12 +179,13 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
         setRoleInfo([...roleInfo, newRole]);
     };
 
-    const handleRemoveRole = () => {
-        const newList = [...roleInfo];
-        if(newList.length > 0) {
-            newList.pop();
-            setRoleInfo(newList);
-        }
+    const handleRemoveRole = (roleName: string) => {
+        // roleInfo에서 roleName을 제외하고 roleLevel을 재정렬
+        const newList = roleInfo.filter((role) => role.roleName !== roleName);
+        newList.forEach((role, index) => {
+            role.roleLevel = index + 1;
+        });
+        setRoleInfo(newList);
     };
 
     const SuccessClose = () => {
@@ -201,6 +210,24 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                 setErrorModalOpen(true);
             });
     }
+
+    const handleEdit = () => {
+        Promise.all([
+            axios.post(`/api/project/role/${projectIdNum}`, roleInfo),
+            axios.post(`/api/project/tag/${projectIdNum}`, tagInfo)
+        ])
+            .then(() => {
+                // 모든 요청이 성공적으로 완료됨
+                setEditMode(false);
+                setSuccessMessage("프로젝트 정보 수정이 완료되었습니다.");
+                setSuccessModalOpen(true);
+            })
+            .catch((error) => {
+                // 에러 처리
+                setErrorMessage("프로젝트 정보 수정 중 오류가 발생했습니다.");
+                setErrorModalOpen(true);
+            });
+    };
 
     useEffect(() => {
         axios.get(`/api/user`)
@@ -263,6 +290,16 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
             })
             .catch((error) => {
                 setErrorMessage("사용자 정보를 가져오는데 실패했습니다.");
+                setErrorModalOpen(true);
+            });
+
+        // 태그 정보 가져오기
+        axios.get(`/api/project/tag/${projectIdNum}`)
+            .then((response) => {
+                setTagInfo(response.data);
+            })
+            .catch((error) => {
+                setErrorMessage("태그 정보를 가져오는데 실패했습니다.");
                 setErrorModalOpen(true);
             });
 
@@ -333,6 +370,27 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
         setExpandedTasks(newExpandedTasks);
     };
 
+    const handleNewTagChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setNewTag(event.target.value);
+    };
+
+    const handleNewTagEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if(newTag) {
+            if (event.key === 'Enter' || event.key === 'Tab' || event.key === ' ') {
+                event.preventDefault();
+                setTagInfo([...tagInfo, {
+                    projectId: projectIdNum
+                    ,tagName: newTag
+                }]);
+                setNewTag(''); // 입력 필드 초기화
+            }
+        }
+    };
+
+    const removeTag = (tagName: string) => {
+        setTagInfo(tagInfo.filter((tag: Tag) => tag.tagName !== tagName));
+    }
+
     return (
         <Dialog open={open} onClose={onClose} onClick={(event) => event.stopPropagation()} fullWidth maxWidth="sm">
             <DialogTitle sx={{pb: 1, backgroundColor: '#f5f7fa', }}>
@@ -358,7 +416,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                                         <IconButton onClick={() => setEditMode(!isEditMode)} size="small" sx={{ padding: '0' }}>
                                             {
                                                 isEditMode ?
-                                                    <CancelIcon /> :
+                                                    <DoDisturbIcon /> :
                                                     <EditIcon />
                                             }
                                         </IconButton>
@@ -443,7 +501,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                             <Tab label="권한조회" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />
                             <Tab label="사용자조회" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />
                             <Tab label="업무조회" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />
-                            {/*<Tab label="업무그룹조회" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />*/}
+                            <Tab label="태그조회" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />
                         </Tabs>
                         <TabPanel
                             value={tabValue}
@@ -505,7 +563,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                                                             />
                                                         </TableCell>
                                                         <TableCell sx={tableCellStyles} align="center">
-                                                            <IconButton onClick={() => handleRemoveRole()}>
+                                                            <IconButton onClick={() => handleRemoveRole(role.roleName)}>
                                                                 <DeleteOutline />
                                                             </IconButton>
                                                         </TableCell>
@@ -690,7 +748,78 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                             index={3}
                             boxStyle={{ backgroundColor: tabValue === 3 ? 'white' : 'inherit' }}
                         >
-                            <Typography sx={{p: 3}}>// TODO: 미구현</Typography>
+                            {
+                                isEditMode ? (
+                                       <>
+                                           {
+                                               tagInfo.map((tag, index) => (
+                                                   <Chip
+                                                       key={index}
+                                                       label={tag.tagName}
+                                                       onDelete={() => removeTag(tag.tagName)}
+                                                       sx={{
+                                                           marginRight: '10px',
+                                                           marginBottom: '5px',
+                                                           '& .MuiChip-root': {
+                                                               color: '#000',
+                                                               height: '100%',
+                                                           },
+                                                           '& .MuiChip-root:hover .MuiChip-deleteIcon': {
+                                                               color: '#fff',
+                                                           },
+                                                           '& .MuiChip-root .MuiChip-label': {
+                                                               fontSize: '12px',
+                                                           },
+                                                       }}
+                                                   />
+                                               ))
+                                           }
+
+                                           <TextField
+                                               variant="standard" // 밑줄 스타일로 변경
+                                               value={newTag}
+                                               onChange={handleNewTagChange}
+                                               onKeyUp={handleNewTagEnter}
+                                               sx={{
+                                                   width: 100
+                                               }}
+                                               InputProps={{
+                                                   style: {
+                                                       fontSize: '14px',
+                                                       backgroundColor: 'transparent',
+                                                       padding: '6px 0 7px' // 필드의 크기 조절
+                                                   }
+                                               }}
+                                           />
+                                       </>
+                                    ): (
+                                    <>
+                                        {
+                                            tagInfo.map((tag, index) => (
+                                                <Chip
+                                                    key={index}
+                                                    label={tag.tagName}
+                                                    sx={{
+                                                        marginRight: '10px',
+                                                        marginBottom: '5px',
+                                                        '& .MuiChip-root': {
+                                                            color: '#000',
+                                                            height: '100%',
+                                                        },
+                                                        '& .MuiChip-root:hover .MuiChip-deleteIcon': {
+                                                            color: '#fff',
+                                                        },
+                                                        '& .MuiChip-root .MuiChip-label': {
+                                                            fontSize: '12px',
+                                                        },
+                                                    }}
+                                                />
+                                            ))
+                                        }
+                                    </>
+                                )
+                            }
+
                         </TabPanel>
 
                         <Box sx={{mt: 3, display: 'flex', justifyContent: 'flex-end'}}>
@@ -740,7 +869,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                                                 backgroundColor: 'rgb(40, 49, 66, 0.8)',
                                             },
                                         }}
-                                        onClick={() => handleConfirm(true)}
+                                        onClick={handleEdit}
                                     >
                                         저장
                                     </Button>
@@ -748,7 +877,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
                             }
 
                             {
-                                projectInfo.confirm === null ?
+                                !isEditMode && projectInfo.confirm === null ?
                                     getRole() === 'ROLE_ADMIN' ?
                                         <Button
                                             variant="contained"
@@ -777,7 +906,7 @@ const ProjectInfoModal: React.FC<ProjectDetailModalProps> = ({ open, onClose, pr
 
 
                             {
-                                projectInfo.confirm === null ?
+                                !isEditMode && projectInfo.confirm === null ?
                                     getRole() === 'ROLE_ADMIN' ?
                                         <Button
                                             variant="contained"
