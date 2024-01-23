@@ -170,6 +170,11 @@ export default function AddModal({ open, onClose }: ModalProps) {
                     return { departmentId: department.idNum, taskId: projectIdNum, role: department.role };
                 }));
 
+                const directoryResponse = await axios.post(`/api/directory/${selectProject.idNum}/task/${projectIdNum}`, { dirName: data.taskName });
+                await axios.post(`/api/directory/${directoryResponse.data}/authority`, usersList.map((user) => {
+                    return { userIdNum: user.idNum };
+                }));
+
                 // 프로젝트 등록 성공 시, 성공 Modal 띄우고 모든 Modal 닫기
                 setSuccessModalOpen(true);
             } catch (error) {

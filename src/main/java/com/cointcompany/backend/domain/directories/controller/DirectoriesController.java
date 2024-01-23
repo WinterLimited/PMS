@@ -45,6 +45,30 @@ public class DirectoriesController {
         return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
     }
 
+    @Operation(summary = "프로젝트 디렉토리 신규 등록")
+    @ApiResponse(responseCode = "200", description = "등록 성공")
+    @PostMapping("/{parentId}/project/{projectId}")
+    public ResponseEntity<Long> saveProjectDirectories(
+            @PathVariable Long parentId, @PathVariable Long projectId, @RequestBody DirectoriesDto.PostDirectories postDirectories
+    ) {
+
+        Long idNum = directoriesService.saveProjectDirectories(postDirectories, parentId, projectId).getIdNum();
+
+        return new ResponseEntity<>(idNum, HttpStatus.OK);
+    }
+
+    @Operation(summary = "작업 디렉토리 신규 등록")
+    @ApiResponse(responseCode = "200", description = "등록 성공")
+    @PostMapping("/{projectId}/task/{taskId}")
+    public ResponseEntity<Long> saveTaskDirectories(
+            @PathVariable Long projectId, @PathVariable Long taskId, @RequestBody DirectoriesDto.PostDirectories postDirectories
+    ) {
+
+        Long idNum = directoriesService.saveTaskDirectories(postDirectories, taskId, projectId).getIdNum();
+
+        return new ResponseEntity<>(idNum, HttpStatus.OK);
+    }
+
     @Operation(summary = "디렉토리 수정")
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @PutMapping("/{directoryId}")
@@ -56,6 +80,7 @@ public class DirectoriesController {
 
         return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
     }
+
 
     // TODO: delete 처리하면 휴지통 디렉토리로 이동하도록 처리 필요
     // TODO: 휴지통 디렉토리에서 삭제 처리하면 아래의 코드 처리 필요
@@ -80,6 +105,7 @@ public class DirectoriesController {
 
         return new ResponseEntity<>(directoryUsersList, HttpStatus.OK);
     }
+
     @Operation(summary = "부모 디렉토리 조회")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/sub/{parentDirectoryId}")
@@ -98,6 +124,18 @@ public class DirectoriesController {
     ) {
 
         return new ResponseEntity<>(directoriesService.findAuthorityDirectoriesByUserId(userId), HttpStatus.OK);
+    }
+
+    @Operation(summary = "디렉토리 권한 등록")
+    @ApiResponse(responseCode = "200", description = "등록 성공")
+    @PostMapping("/{directoryId}/authority")
+    public ResponseEntity<String> saveDirectoryAuthority (
+            @PathVariable Long directoryId, @RequestBody List<DirectoriesDto.UserAuthority> userId
+    ) {
+
+        directoriesService.saveDirectoryAuthority(userId, directoryId);
+
+        return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
     }
 
 }

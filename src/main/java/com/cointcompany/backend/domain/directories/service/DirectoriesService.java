@@ -5,6 +5,12 @@ import com.cointcompany.backend.domain.directories.entity.Directories;
 import com.cointcompany.backend.domain.directories.entity.DirectoryUsers;
 import com.cointcompany.backend.domain.directories.repository.DirectoriesRepository;
 import com.cointcompany.backend.domain.directories.repository.DirectoryUsersRepository;
+import com.cointcompany.backend.domain.projects.entity.Projects;
+import com.cointcompany.backend.domain.projects.repository.ProjectsRepository;
+import com.cointcompany.backend.domain.tasks.entity.Tasks;
+import com.cointcompany.backend.domain.tasks.repository.TasksRepository;
+import com.cointcompany.backend.domain.users.entity.Users;
+import com.cointcompany.backend.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +26,10 @@ import java.util.stream.Collectors;
 public class DirectoriesService {
 
     private final DirectoriesRepository directoriesRepository;
+    private final ProjectsRepository projectsRepository;
+    private final TasksRepository tasksRepository;
     private final DirectoryUsersRepository directoryUsersRepository;
+    private final UsersRepository usersRepository;
 
     @Transactional(readOnly = true)
     public List<DirectoriesDto.GetDirectories> findAllDirectories() {
@@ -41,11 +50,62 @@ public class DirectoriesService {
 
         Directories directories = Directories.of(
                 postDirectories.getDirName(),
-                directoriesRepository.findById(parentDirectoriesId).orElseThrow()
+                directoriesRepository.findById(parentDirectoriesId).orElseThrow(),
+                null,
+                null
         );
 
         directoriesRepository.save(directories);
 
+        return "SUCCESS";
+    }
+
+    @Transactional
+    public Directories saveProjectDirectories(DirectoriesDto.PostDirectories postDirectories, Long parentDirectoriesId, Long projectId) {
+
+        Projects projects = projectsRepository.findById(projectId).orElseThrow();
+
+        Directories directories = Directories.of(
+                postDirectories.getDirName(),
+                directoriesRepository.findById(parentDirectoriesId).orElseThrow(),
+                projects,
+                null
+        );
+
+        return directoriesRepository.save(directories);
+    }
+
+    @Transactional
+    public Directories saveTaskDirectories(DirectoriesDto.PostDirectories postDirectories, Long taskId, Long projectId) {
+
+        // projectId를 이용해 Directory 조회 이후, 해당 Directory를 parentDirectory로 지정
+        Directories parentDirectories = directoriesRepository.findByProjectsIdNum(projectId);
+        Tasks tasks = tasksRepository.findById(taskId).orElseThrow();
+
+        Directories directories = Directories.of(
+                postDirectories.getDirName(),
+                parentDirectories,
+                null,
+                tasks
+        );
+
+
+        return directoriesRepository.save(directories);
+    }
+
+    @Transactional
+    public String saveDirectoryAuthority(List<DirectoriesDto.UserAuthority> userAuthorityList, Long directoryId) {
+
+        Directories directories = directoriesRepository.findById(directoryId).orElseThrow();
+
+        for (DirectoriesDto.UserAuthority userAuthority : userAuthorityList) {
+            Users users = usersRepository.findById(userAuthority.getUserIdNum()).orElseThrow();
+            DirectoryUsers directoryUsers = DirectoryUsers.of(
+                    users,
+                    directories
+            );
+            directoryUsersRepository.save(directoryUsers);
+        }
         return "SUCCESS";
     }
 

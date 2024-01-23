@@ -99,4 +99,17 @@ public class DirectoriesDto {
             this.directoriesIdNum = directoryUsers.getDirectoriesIdNum();
         }
     }
+
+    @NoArgsConstructor
+    @Data
+    public static class UserAuthority {
+
+        private Long userIdNum;
+
+        public UserAuthority (DirectoryUsers directoryUsers) {
+
+            this.userIdNum = directoryUsers.getUsers().getIdNum();
+
+        }
+    }
 }

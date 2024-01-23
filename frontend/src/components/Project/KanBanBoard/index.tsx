@@ -386,6 +386,8 @@ const Kanban: React.FC = () => {
         if (toColumn === 'WAITING') {
             setTaskIdNum(idNum);
             setTaskStatusModalOpen(true);
+            // status 변경 정지
+            return;
         }
 
         axios.put("/api/task/status", taskStatus)

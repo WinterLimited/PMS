@@ -166,6 +166,11 @@ export default function AddModal({ open, onClose }: ModalProps) {
                     return { departmentId: department.idNum, projectId: projectIdNum, role: department.role };
                 }));
 
+                const directoryResponse = await axios.post(`/api/directory/3/project/${projectIdNum}`, { dirName: data.projectName });
+                await axios.post(`/api/directory/${directoryResponse.data}/authority`, usersList.map((user) => {
+                    return { userIdNum: user.idNum };
+                }));
+
                 // email 요청
                 if(getRole() !== 'ROLE_ADMIN') {
                     const emailMessage = {
