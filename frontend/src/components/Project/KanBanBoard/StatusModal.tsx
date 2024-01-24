@@ -10,9 +10,9 @@ import {
     Grid,
     TextareaAutosize, Divider
 } from "@mui/material";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {useEffect, useState} from "react";
 import CloseIcon from "@mui/icons-material/Close";
-import {TimePicker} from "@mui/lab";
 import * as React from "react";
 import axios from "../../../redux/axiosConfig";
 import ErrorModal from "../../common/ErrorModal";
@@ -21,6 +21,7 @@ import { EditorState, convertToRaw } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import {styled} from "@mui/material/styles";
 
 type Task = {
     taskName: string,
@@ -34,10 +35,13 @@ type Task = {
     projectsIdNum: number,
 }
 
+type Status = 'TODO' | 'WORKING' | 'WAITING' | 'DONE';
+
 interface ModalProps {
     open: boolean;
     onClose: () => void;
     idNum: number;
+    setReloadData: (reloadData: boolean) => void;
 }
 
 type Data = {
@@ -46,9 +50,23 @@ type Data = {
     description: string,
 }
 
-export default function StatusModal({ open, onClose, idNum }: ModalProps) {
+type File = {
+    name: string;
+    size: number;
+    type: string;
+}
+
+type TaskStatus = {
+    idNum: number;
+    status: string;
+}
+
+
+export default function StatusModal({ open, onClose, idNum, setReloadData }: ModalProps) {
     // Modal의 페이지네이션 구현
     const [data, setData] = useState<Data>({} as Data);
+    const [files, setFiles] = useState<File[]>([]); // 파일 업로드
+    const [fileName, setFileName] = useState<string>(''); // 파일 업로드
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isErrorModalOpen, setErrorModalOpen] = useState<boolean>(false);
     const [isSuccessModalOpen, setSuccessModalOpen] = useState<boolean>(false);
@@ -58,6 +76,13 @@ export default function StatusModal({ open, onClose, idNum }: ModalProps) {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setData(prevData => ({ ...prevData, [event.target.name]: event.target.value }));
     };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const file = event.target.files[0];
+        if (file) {
+            setFileName(file.name);
+        }
+    }
 
     const SuccessClose = () => {
         setSuccessModalOpen(false);
@@ -72,6 +97,20 @@ export default function StatusModal({ open, onClose, idNum }: ModalProps) {
                     type: 'DONE',   // TODO
                     description: data.description,
                 });
+
+                // taskIdNum과 status를 TaskStatus 형태로 전송
+                const taskStatus: TaskStatus = {
+                    idNum,
+                    status: 'WAITING'
+                }
+
+                axios.put("/api/task/status", taskStatus)
+                    .then((response) => {
+                        if (response.status === 200) {
+                            setReloadData(true);
+                            setReloadData(false);
+                        }
+                    })
 
                 setSuccessModalOpen(true);
             } catch (error) {
@@ -115,6 +154,13 @@ export default function StatusModal({ open, onClose, idNum }: ModalProps) {
         // data의 description에 JSON 문자열 저장
         setData({ ...data, description: jsonString });
     };
+
+
+
+
+    const Input = styled('input')({
+        display: 'none',
+    });
 
     return (
             <Modal open={open}>
@@ -170,22 +216,40 @@ export default function StatusModal({ open, onClose, idNum }: ModalProps) {
 
                             <Divider />
 
-                            <TextField
-                                label="공수 시간 (시간)"
-                                name="workTime"
-                                value={data.workTime}
-                                onChange={handleInputChange}
-                                type="number"
-                                inputProps={{ min: "0", step: "1" }} // 숫자만 입력받도록 설정
-                                InputProps={{
-                                    style: { fontSize: '14px', backgroundColor: 'transparent' }
-                                }}
-                                InputLabelProps={{
-                                    style: { fontSize: '14px'},
-                                    shrink: true,
-                                }}
-                                sx={{ mt: 2, mb: 2 }}
-                            />
+                            <Grid container spacing={2} alignItems="center" sx={{ mt: 2, mb: 2 }}>
+                                <Grid item xs={8}>
+                                    <TextField
+                                        label="공수 시간 (시간)"
+                                        name="workTime"
+                                        value={data.workTime}
+                                        onChange={handleInputChange}
+                                        type="number"
+                                        inputProps={{ min: "0", step: "1" }}
+                                        InputProps={{
+                                            style: { fontSize: '14px', backgroundColor: 'transparent' }
+                                        }}
+                                        InputLabelProps={{
+                                            style: { fontSize: '14px' },
+                                            shrink: true,
+                                        }}
+                                    />
+                                </Grid>
+
+
+                                <Grid item xs={3} style={{padding: 0}}>
+                                    <div>
+                                        <Typography variant="h6" component="div" sx={{ fontSize: '16px', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            첨부파일
+                                        </Typography>
+                                        <label htmlFor="contained-button-file">
+                                            <Input accept="image/*" id="contained-button-file" multiple type="file" onChange={handleFileChange} />
+                                            <Button variant="contained" component="span" style={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
+                                                {fileName ? <div style={{ marginTop: '10px', color: 'black' }}>{fileName}</div> : <CloudUploadIcon sx={{color: 'gray'}} />}
+                                            </Button>
+                                        </label>
+                                    </div>
+                                </Grid>
+                            </Grid>
 
                             <Editor
                                 editorState={editorState}

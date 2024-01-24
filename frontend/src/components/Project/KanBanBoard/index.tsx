@@ -36,6 +36,7 @@ interface CardProps {
     text: string;
     columnIndex: number;
     index: number;
+    setReloadData: (reloadData: boolean) => void;
     moveCard: (toColumn: Status, idNum: number) => void;
 }
 
@@ -86,9 +87,10 @@ interface ColumnProps {
     searchTerm: string;
     hoverColumn: Status | null;
     setHoverColumn: (status: Status | null) => void;
+    setReloadData: (reloadData: boolean) => void;
 }
 
-const Column: React.FC<ColumnProps> = ({ status, tasks, moveCard, searchTerm, hoverColumn, setHoverColumn }) => {
+const Column: React.FC<ColumnProps> = ({ status, tasks, moveCard, searchTerm, hoverColumn, setHoverColumn, setReloadData }) => {
     let bgColor = 'transparent';
 
     switch (status) {
@@ -166,7 +168,7 @@ const Column: React.FC<ColumnProps> = ({ status, tasks, moveCard, searchTerm, ho
                     <Typography variant="body1">업무가 없습니다.</Typography>
                 ) : tasksForStatus.map((task, index) => (
                     <React.Fragment key={task.idNum}>
-                        <Card {...task} columnIndex={COLUMN_STATUSES.indexOf(status)} index={index} moveCard={moveCard} />
+                        <Card {...task} columnIndex={COLUMN_STATUSES.indexOf(status)} index={index} moveCard={moveCard} setReloadData={setReloadData} />
                     </React.Fragment>
                 ))}
             </Box>
@@ -186,6 +188,7 @@ const Card: React.FC<TaskResponse & CardProps> = ({
                                                       columnIndex,
                                                       index,
                                                       moveCard,
+                                                      setReloadData
                                                   }) => {
     const cardRef = useRef<HTMLDivElement>(null);
 
@@ -215,6 +218,27 @@ const Card: React.FC<TaskResponse & CardProps> = ({
     if (status !== "DONE") {
         drag(cardRef);
     }
+
+
+    const confirmCard = (
+        toColumn: Status,
+        idNum: number,
+    ) => {
+        // taskIdNum과 status를 TaskStatus 형태로 전송
+        const taskStatus: TaskStatus = {
+            idNum,
+            status: toColumn
+        }
+
+        axios.put("/api/task/status", taskStatus)
+            .then((response) => {
+                if (response.status === 200) {
+                    setReloadData(true);
+                    setReloadData(false);
+                }
+            })
+    };
+
 
     return (
         <MUICard ref={cardRef}
@@ -280,6 +304,7 @@ const Card: React.FC<TaskResponse & CardProps> = ({
                                         backgroundColor: 'rgb(0, 0, 0, 0.1)',
                                     },
                                 }}
+                                onClick={() => confirmCard('DONE', idNum)}
                             >
                                 <CheckCircleIcon style={{ color: 'rgb(23, 210, 23)', fontSize: '15px'}} />
                             </Button>
@@ -302,6 +327,7 @@ const Card: React.FC<TaskResponse & CardProps> = ({
                                         backgroundColor: 'rgb(0, 0, 0, 0.1)',
                                     },
                                 }}
+                                onClick={() => confirmCard('WORKING', idNum)}
                             >
                                 <CancelIcon style={{ color: 'red', fontSize: '15px'}} />
                             </Button>
@@ -669,7 +695,7 @@ const Kanban: React.FC = () => {
                 <DndProvider backend={HTML5Backend}>
                     <Box sx={{ display: 'flex', width: '100%', backgroundColor: '#fff' }}>
                         {COLUMN_STATUSES.map(status => (
-                            <Column status={status} tasks={taskResponses} moveCard={moveCard} searchTerm={searchTerm} hoverColumn={hoverColumn} setHoverColumn={setHoverColumn} />
+                            <Column status={status} tasks={taskResponses} moveCard={moveCard} searchTerm={searchTerm} hoverColumn={hoverColumn} setHoverColumn={setHoverColumn} setReloadData={setReloadData} />
                         ))}
                     </Box>
                 </DndProvider>
@@ -677,7 +703,7 @@ const Kanban: React.FC = () => {
         </Grid>
 
         {/*공수관리  Modal*/}
-        <StatusModal open={taskStatusModalOpen} onClose={() => setTaskStatusModalOpen(false)} idNum={taskIdNum} />
+        <StatusModal open={taskStatusModalOpen} onClose={() => setTaskStatusModalOpen(false)} idNum={taskIdNum} setReloadData={setReloadData} />
 
         {/*에러 발생 Modal*/}
         <ErrorModal
