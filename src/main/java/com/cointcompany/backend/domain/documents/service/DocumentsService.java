@@ -9,6 +9,9 @@ import com.cointcompany.backend.domain.documents.repository.DocumentUsersReposit
 import com.cointcompany.backend.domain.documents.repository.DocumentsRepository;
 import com.cointcompany.backend.domain.file.entity.Files;
 import com.cointcompany.backend.domain.file.repository.FilesRepository;
+import com.cointcompany.backend.domain.users.entity.Users;
+import com.cointcompany.backend.domain.users.repository.UsersRepository;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +37,7 @@ public class DocumentsService {
     private final DirectoriesRepository directoriesRepository;
     private final DocumentsRepository documentsRepository;
     private final FilesRepository filesRepository;
+    private final UsersRepository usersRepository;
 
     private final DocumentUsersRepository documentUsersRepository;
 
@@ -52,7 +56,7 @@ public class DocumentsService {
     }
 
     @Transactional
-    public ResponseEntity<String> uploadDocuments(MultipartFile file, Long directoryId) {
+    public Documents uploadDocuments(MultipartFile file, Long directoryId) {
 
         try {
 
@@ -66,12 +70,10 @@ public class DocumentsService {
 
             Documents documents = Documents.of(file.getOriginalFilename(), directories, files);
 
-            documentsRepository.save(documents);
 
-            return ResponseEntity.ok("File uploaded and saved to DB successfully!");
+            return documentsRepository.save(documents);
         } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed.");
+            throw new RuntimeException(e);
         }
     }
 
@@ -140,6 +142,20 @@ public class DocumentsService {
         filesRepository.save(files);
         Documents copyDocuments = Documents.of(documents.getDocName(), directories, files);
         documentsRepository.save(copyDocuments);
+
+        return "SUCCESS";
+    }
+
+    @Transactional
+    public String addAuthorityDocuments(Long documentId, Long userId) {
+
+        Documents documents = documentsRepository.findById(documentId).orElseThrow();
+        Users users = usersRepository.findById(userId).orElseThrow();
+        DocumentUsers documentUsers = DocumentUsers.of(
+                users,
+                documents
+        );
+        documentUsersRepository.save(documentUsers);
 
         return "SUCCESS";
     }

@@ -49,11 +49,12 @@ public class DocumentsController {
     @Operation(summary = "파일 업로드")
     @ApiResponse(responseCode = "200", description = "업로드 성공")
     @PostMapping("/upload/{directoryId}")
-    public ResponseEntity<String> uploadDocuments(
+    public ResponseEntity<Long> uploadDocuments(
             @RequestParam("file") MultipartFile file,
             @PathVariable Long directoryId
             ) {
-        return documentsService.uploadDocuments(file, directoryId);
+        Long idNum = documentsService.uploadDocuments(file, directoryId).getIdNum();
+        return new ResponseEntity<>(idNum, HttpStatus.OK);
     }
 
     @CrossOrigin(exposedHeaders = "Content-Disposition")
@@ -193,6 +194,16 @@ public class DocumentsController {
             @PathVariable Long directoryId) {
 
         return new ResponseEntity<>(documentsService.copyDocuments(documentId, directoryId), HttpStatus.OK);
+    }
+
+    @Operation(summary = "파일 권한 추가")
+    @ApiResponse(responseCode = "200", description = "권한 추가 성공")
+    @PostMapping("/authority/{documentId}/{userId}")
+    public ResponseEntity<String> addAuthorityDocuments (
+            @PathVariable Long documentId,
+            @PathVariable Long userId) {
+
+        return new ResponseEntity<>(documentsService.addAuthorityDocuments(documentId, userId), HttpStatus.OK);
     }
 
     @Operation(summary = "파일 권한 조회")

@@ -65,7 +65,7 @@ type TaskStatus = {
 export default function StatusModal({ open, onClose, idNum, setReloadData }: ModalProps) {
     // Modal의 페이지네이션 구현
     const [data, setData] = useState<Data>({} as Data);
-    const [files, setFiles] = useState<File[]>([]); // 파일 업로드
+    const [files, setFiles] = useState<File[]>([]);
     const [fileName, setFileName] = useState<string>(''); // 파일 업로드
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isErrorModalOpen, setErrorModalOpen] = useState<boolean>(false);
@@ -80,6 +80,7 @@ export default function StatusModal({ open, onClose, idNum, setReloadData }: Mod
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const file = event.target.files[0];
         if (file) {
+            setFiles([file]);
             setFileName(file.name);
         }
     }
@@ -112,7 +113,32 @@ export default function StatusModal({ open, onClose, idNum, setReloadData }: Mod
                         }
                     })
 
-                setSuccessModalOpen(true);
+
+                if (files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', files[0]);
+                    const taskUserResponse = await axios.get(`/api/task/user/${idNum}`);
+
+                    const directoryId = await axios.get(`/api/directory/task/${idNum}`);
+                    const response = await axios.post(`/api/document/upload/${directoryId.data}`, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
+                    if (response.status === 200) {
+                        // document 권한 부여
+                        taskUserResponse.data.forEach((user: any) => {
+                            axios.post(`/api/document/authority/${response.data}/${user.userId}`);
+                        });
+
+                        setSuccessModalOpen(true);
+                    } else {
+                        setErrorModalOpen(true);
+                        setErrorMessage('파일 업로드 중 오류가 발생했습니다.');
+                    }
+                } else {
+                    setSuccessModalOpen(true);
+                }
             } catch (error) {
                 setErrorModalOpen(true);
                 if (error instanceof Error) {
@@ -242,7 +268,7 @@ export default function StatusModal({ open, onClose, idNum, setReloadData }: Mod
                                             첨부파일
                                         </Typography>
                                         <label htmlFor="contained-button-file">
-                                            <Input accept="image/*" id="contained-button-file" multiple type="file" onChange={handleFileChange} />
+                                            <Input accept="*/*" id="contained-button-file" multiple type="file" onChange={handleFileChange} />
                                             <Button variant="contained" component="span" style={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
                                                 {fileName ? <div style={{ marginTop: '10px', color: 'black' }}>{fileName}</div> : <CloudUploadIcon sx={{color: 'gray'}} />}
                                             </Button>

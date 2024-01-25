@@ -10,4 +10,6 @@ public interface DirectoriesRepository extends JpaRepository<Directories, Long> 
     List<Directories> findByParentDirectoriesIdNum(Long parentDirectoryId);
 
     Directories findByProjectsIdNum(Long projectId);
+
+    Directories findByTasksIdNum(Long taskId);
 }

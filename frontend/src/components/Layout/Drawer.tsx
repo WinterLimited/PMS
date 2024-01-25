@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTheme, styled } from '@mui/material/styles';
 import Drawer from '@mui/material/Drawer';
-import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
 import Toolbar from "@mui/material/Toolbar";
 import sidebarLogo from "../../assets/coint.png";
@@ -54,7 +53,7 @@ export default function SideDrawer({ open, drawerWidth }: DrawerProps) {
     const initialSidebarItems: SidebarItemState[] = [
 
         {title: "문서관리", icon: <CloudDownload sx={{ color: '#c8c8c8' }} />, items: ["드라이브"], itemLink: ["/document/drive"], open: false},
-        {title: "프로젝트관리", icon: <ListAlt sx={{ color: '#c8c8c8' }} />, items: ["프로젝트조회", "업무조회", "업무일정", "업무리스트", "업무달력"], itemLink: ["/project/plan", "/project/task", "/project/task/ganttchart", "/project/task/kanbanboard", "project/task/calendar"], open: false},
+        {title: "프로젝트관리", icon: <ListAlt sx={{ color: '#c8c8c8' }} />, items: ["프로젝트조회", "업무조회", "업무리스트", "업무일정"], itemLink: ["/project/plan", "/project/task", "/project/task/kanbanboard", "project/task/calendar"], open: false},
         {title: "템플릿관리", icon: <EventNote sx={{ color: '#c8c8c8' }} />, items: ["템플릿조회", "프로젝트 복사"], itemLink: ["/template/list", "/template/copy"], open: false},
         // ROLE_ADMIN만 보여주는 메뉴
         ...(getRole() === "ROLE_ADMIN" ? [{title: "시스템관리", icon: <Settings sx={{ color: '#c8c8c8' }} />, items: ["사용자 관리", "사용자 그룹 관리", "부서 관리"], itemLink: ["/system/user", "/system/usergroup", "/system/department"], open: false}] : []),

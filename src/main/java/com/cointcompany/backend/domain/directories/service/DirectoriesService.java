@@ -162,6 +162,11 @@ public class DirectoriesService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public Long findTaskDirectoriesId(Long taskId) {
+        return directoriesRepository.findByTasksIdNum(taskId).getIdNum();
+    }
+
 //    @Transactional(readOnly = true)
 //    public List<DirectoriesDto.GetDirectoryUsers> findDirectoryUsers(Long userId) {
 //

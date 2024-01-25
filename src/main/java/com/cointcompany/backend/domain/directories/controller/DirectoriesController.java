@@ -138,4 +138,14 @@ public class DirectoriesController {
         return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
     }
 
+    @Operation(summary = "작업 디렉토리 조회")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping("/task/{taskId}")
+    public ResponseEntity<Long> getTaskDirectories (
+            @PathVariable Long taskId
+    ) {
+
+        return new ResponseEntity<>(directoriesService.findTaskDirectoriesId(taskId), HttpStatus.OK);
+    }
+
 }
