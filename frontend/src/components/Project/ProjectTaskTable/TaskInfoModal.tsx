@@ -35,6 +35,9 @@ import {DeleteOutline} from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import GroupsIcon from "@mui/icons-material/Groups";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SearchIcon from "@mui/icons-material/Search";
+import DoDisturbIcon from "@mui/icons-material/DoDisturb";
+import EditIcon from "@mui/icons-material/Edit";
 
 type Task = {
     taskName: string,
@@ -72,6 +75,8 @@ type ProjectUser = {
 type Data = {
     type: string,
     workTime: number,
+    regUserid: string,
+    regDate: string,
     description: string,
 }
 
@@ -110,6 +115,8 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
     const [roleInfo, setRoleInfo] = useState<Role[]>([]);
     const [userInfo, setUserInfo] = useState<ProjectUser[]>([]);
     const [workInfo, setWorkInfo] = useState<Data[]>([]);
+    const [expanded, setExpanded] = useState<boolean>(false);
+    const [workInfoIndex, setWorkInfoIndex] = useState<number>(0);
     const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
     const [progress, setProgress] = useState<number>(0);
     const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -237,7 +244,6 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
         }
     }
 
-
     const toggleTaskExpansion = (index: number) => {
         const newExpandedTasks = [...expandedTasks];
         if (newExpandedTasks.includes(index)) {
@@ -248,6 +254,18 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
         }
         setExpandedTasks(newExpandedTasks);
     };
+
+
+    const handleTaskWorkInfoClick = (event: React.MouseEvent<unknown>, index: number) => {
+        event.stopPropagation();  // 이벤트 전파 중단
+        setWorkInfoIndex(index);
+        setExpanded(true);
+    }
+
+    const handleTaskWorkInfoClose = () => {
+        setExpanded(false);
+    }
+
 
     return (
         <Dialog open={open} onClose={onClose} onClick={(event) => event.stopPropagation()} fullWidth maxWidth="sm">
@@ -348,7 +366,7 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
                         <Tabs value={tabValue} onChange={handleChange} sx={{ marginTop: 2 }}>
                             <Tab label="사용자조회" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />
                             <Tab label="공수관리" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />
-                            <Tab label="이슈관리" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />
+                            {/*<Tab label="이슈관리" sx={{ "&.Mui-selected": { backgroundColor: 'white' } }} />*/}
                         </Tabs>
                         <TabPanel
                             value={tabValue}
@@ -439,9 +457,9 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
                                                         }
                                                     </TableCell>
                                                     <TableCell sx={tableCellStyles} align="center" >
-                                                        {
-
-                                                        }
+                                                            <IconButton onClick={(event) => handleTaskWorkInfoClick(event, index)}>
+                                                                <SearchIcon/>
+                                                            </IconButton>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -496,6 +514,31 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
                             }
 
                         </TabPanel>
+
+                        {
+                            expanded && workInfo[workInfoIndex] && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Paper variant="outlined" sx={{ padding: 2 }}>
+                                        <Box sx={{ mt: 1 }}>
+                                            <Typography variant="h6" sx={{ fontWeight: 'bold' }} gutterBottom>
+                                                <Typography variant="body2" ml={1} sx={{ fontSize: '13px', color: '#888888', display: 'inline-block' }}>
+                                                    등록일: {workInfo[workInfoIndex].regDate.substring(0, 10)}
+                                                </Typography>
+
+                                                <Box sx={{ float: 'right' }}>
+                                                    <IconButton onClick={() => handleTaskWorkInfoClose()}>
+                                                        <CloseIcon />
+                                                    </IconButton>
+                                                </Box>
+                                            </Typography>
+                                            <Box sx={{ mt: 2 }}>
+
+                                            </Box>
+                                        </Box>
+                                    </Paper>
+                                </Box>
+                            )
+                        }
 
                     </DialogContent>
                 )
