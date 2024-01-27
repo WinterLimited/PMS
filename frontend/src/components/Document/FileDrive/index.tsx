@@ -19,7 +19,30 @@ const FileDrive = () => {
         const fetchDirectoryAuthorities = async () => {
             try {
                 const response = await axios.get(`http://localhost:8080/api/directory/authority/${getUserId()}`);
-                setDirectoryAuthorities(response.data);
+
+                // 새로운 권한 정보 생성
+                const newAuthorities = [
+                    {
+                        idNum: Math.floor(Math.random() * 200000000) + 20000000000,
+                        level: 1,
+                        directoriesIdNum: 1,
+                    },
+                    {
+                        idNum: Math.floor(Math.random() * 200000000) + 20000000000,
+                        level: 1,
+                        directoriesIdNum: 2,
+                    },
+                    {
+                        idNum: Math.floor(Math.random() * 200000000) + 20000000000,
+                        level: 1,
+                        directoriesIdNum: 3,
+                    }
+                ];
+
+                // 기존 데이터와 새로운 권한 정보를 결합
+                const combinedAuthorities = response.data.concat(newAuthorities);
+
+                setDirectoryAuthorities(combinedAuthorities);
             } catch (error) {
                 setErrorMessage("디렉토리 권한을 불러오는데 실패했습니다.");
                 setErrorModalOpen(true);

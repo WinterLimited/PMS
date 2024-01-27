@@ -333,6 +333,8 @@ const Drive: React.FC = () => {
         try {
             const response = await axios.get(`/api/directory/sub/${projectIdNum}`);
 
+            
+
             // 권한 없으면 안보이는 방식으로 처리
             const filteredResponse = response.data.filter((dir: dirResponse) => {
                 const authority = directoryAuthorities.find(auth => auth.directoriesIdNum === dir.idNum);
