@@ -27,6 +27,8 @@ import {
 } from '@mui/material';
 import axios from "../../../redux/axiosConfig";
 import { Data } from "./data";
+import { EditorState, convertFromRaw } from 'draft-js';
+import { Editor } from 'react-draft-wysiwyg';
 import {getRole}  from "../../common/tokenUtils";
 import CloseIcon from "@mui/icons-material/Close";
 import ErrorModal from "../../common/ErrorModal";
@@ -116,6 +118,9 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
     const [userInfo, setUserInfo] = useState<ProjectUser[]>([]);
     const [workInfo, setWorkInfo] = useState<Data[]>([]);
     const [expanded, setExpanded] = useState<boolean>(false);
+    const [editorState, setEditorState] = useState<EditorState>(() =>
+        EditorState.createEmpty()
+    );
     const [workInfoIndex, setWorkInfoIndex] = useState<number>(0);
     const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
     const [progress, setProgress] = useState<number>(0);
@@ -130,6 +135,36 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
         event.stopPropagation();
         setTabValue(newValue);
     };
+
+    const handleTaskWorkInfoClick = (event: React.MouseEvent<unknown>, index: number) => {
+        event.stopPropagation();  // 이벤트 전파 중단
+        setWorkInfoIndex(index);
+        setExpanded(true);
+    }
+
+    const handleTaskWorkInfoClose = () => {
+        setExpanded(false);
+    }
+
+    const loadEditorContent = (savedContent: string) => {
+        try {
+            // 데이터베이스에서 불러온 JSON 문자열을 객체로 변환
+            const content = JSON.parse(savedContent);
+            // 변환된 객체를 Draft.js의 ContentState로 변환
+            const contentState = convertFromRaw(content);
+            // ContentState를 사용하여 EditorState 생성
+            const editorState = EditorState.createWithContent(contentState);
+            // EditorState 설정
+            setEditorState(editorState);
+        } catch (error) {
+            console.error('에디터 내용을 불러오는 데 실패했습니다:', error);
+            // 에러 처리
+        }
+    };
+
+    useEffect(() => {
+        loadEditorContent(workInfo[workInfoIndex]?.description);
+    }, [workInfoIndex])
 
     useEffect(() => {
         axios.get(`/api/user`)
@@ -254,18 +289,6 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
         }
         setExpandedTasks(newExpandedTasks);
     };
-
-
-    const handleTaskWorkInfoClick = (event: React.MouseEvent<unknown>, index: number) => {
-        event.stopPropagation();  // 이벤트 전파 중단
-        setWorkInfoIndex(index);
-        setExpanded(true);
-    }
-
-    const handleTaskWorkInfoClose = () => {
-        setExpanded(false);
-    }
-
 
     return (
         <Dialog open={open} onClose={onClose} onClick={(event) => event.stopPropagation()} fullWidth maxWidth="sm">
@@ -532,7 +555,25 @@ const TaskInfoModal: React.FC<TaskDetailModalProps> = ({ open, onClose, taskIdNu
                                                 </Box>
                                             </Typography>
                                             <Box sx={{ mt: 2 }}>
-
+                                                {
+                                                    editorState == '' ? (
+                                                        <Editor
+                                                            editorState={editorState}
+                                                            readOnly={true}
+                                                            toolbarHidden={true}
+                                                            wrapperClassName="wrapper-class"
+                                                            editorClassName="editor-class"
+                                                            toolbarClassName="toolbar-class"
+                                                            localization={{
+                                                                locale: 'ko',
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <Typography variant="body2" ml={1} sx={{ fontSize: '13px', color: '#888888' }}>
+                                                            공수 내용이 없습니다.
+                                                        </Typography>
+                                                    )
+                                                }
                                             </Box>
                                         </Box>
                                     </Paper>
