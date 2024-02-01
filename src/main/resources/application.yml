@@ -1,0 +1,78 @@
+  ## database
+spring:
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://localhost:50000/coint_cad2
+        username: postgres
+        password: zhdlsxm4602!
+
+
+  ## mail
+    mail:
+        host: smtp.gmail.com # 1
+        port: 587 # 2
+        username: chami0205@gmail.com # 3
+        password: yutl idho xmmq meqq # 4
+        properties:
+            mail:
+                smtp:
+                    auth: true # 5
+                    timeout: 5000 # 6
+                    starttls:
+                        enable: true # 7
+
+  ## jpa
+    jpa:
+        show-sql: true
+        hibernate:
+            ddl-auto: update
+            format_sql: true
+    data:
+        redis:
+            host: localhost
+            port: 6379
+    main:
+        allow-bean-definition-overriding: true
+
+    mvc:
+        pathmatch:
+            matching-strategy: ant_path_matcher
+
+    servlet:
+        multipart:
+            max-file-size: 1024MB
+            max-request-size: 1024MB
+
+jwt:
+    secretKey: "VGhpcyBpcyBhIGRlbW8gcHJvamVjdCBmb3IgaW1wbGVtZW50aW5nIGp3dC4=VGhpcyBpcyBhIGRlbW8gcHJvamVjdCBmb3IgaW1wbGVtZW50aW5nIGp3dC4="  # 임의의 문자열을 BASE64로 인코딩한 값
+#    refreshKey: {jwt refresh Key}
+    refresh-token-validity-in-seconds: 1209600 # 14일
+    access-token-validity-in-seconds: 43200 # 12시간
+
+
+  ## logging
+logging:
+    level:
+        org:
+            hibernate:
+                sql: debug
+            type:
+                descriptor:
+                    sql:
+                        spi: trace
+
+springdoc:
+    version: = v1.0.0
+    packages-to-scan: com.cointcompany.backend
+    swagger-ui:
+        path: /api-docs
+        tags-sorter: alpha
+        operations-sorter: alpha
+    api-docs:
+        path: /api-docs/json
+        groups:
+            enabled: true
+    cache:
+        disabled: true
+    default-consumes-media-type: application/json;charset=UTF-8
+    default-produces-media-type: application/json;charset=UTF-8
